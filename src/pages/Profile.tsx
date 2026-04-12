@@ -6,6 +6,9 @@ import { motion } from 'motion/react';
 import { User, MapPin, Phone, Mail, ShoppingBag, Package, Clock, CheckCircle, ChevronRight, Loader2, Save } from 'lucide-react';
 import { cn } from '../lib/utils';
 
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../firebase';
+
 interface Order {
   id: string;
   total: number;
@@ -92,6 +95,15 @@ export default function Profile() {
   }
 
   if (!user) {
+    const handleLogin = async () => {
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (error) {
+        console.error("Login failed:", error);
+      }
+    };
+
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
         <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
@@ -99,6 +111,12 @@ export default function Profile() {
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Login</h2>
         <p className="text-gray-500 mb-8">You need to be logged in to view your profile and orders.</p>
+        <button 
+          onClick={handleLogin}
+          className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
+        >
+          Login with Google
+        </button>
       </div>
     );
   }

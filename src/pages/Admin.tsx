@@ -15,8 +15,11 @@ import { useTheme } from '../context/ThemeContext';
 import { GoogleGenAI } from "@google/genai";
 import { MOCK_PRODUCTS } from '../constants';
 
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../firebase';
+
 export default function Admin() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const { settings, updateSettings } = useTheme();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'settings' | 'support'>('dashboard');
   const [products, setProducts] = useState<Product[]>([]);
@@ -213,7 +216,74 @@ export default function Admin() {
     }
   };
 
-  if (!isAdmin) return null;
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="animate-spin text-blue-600" size={40} />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl space-y-8 text-center"
+        >
+          <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Users size={32} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-900">Admin Login</h2>
+            <p className="text-slate-500 text-sm font-medium">Please login with your admin account to access the dashboard.</p>
+          </div>
+          <button 
+            onClick={handleLogin}
+            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 flex items-center justify-center space-x-3"
+          >
+            <span>Login with Google</span>
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl space-y-8 text-center"
+        >
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck size={32} />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-900">Access Denied</h2>
+            <p className="text-slate-500 text-sm font-medium">You do not have administrator privileges. Your email: <span className="text-slate-900 font-bold">{user.email}</span></p>
+          </div>
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-bold text-lg hover:bg-slate-200 transition-all"
+          >
+            Return to Shop
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (!isPasswordCorrect) {
     return (

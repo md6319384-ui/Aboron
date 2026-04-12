@@ -59,7 +59,7 @@ export default function App() {
                   <Route path="/order-success/:orderId" element={<OrderSuccess />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/profile" element={<Profile />} />
-                  <Route path="/admin" element={isAdmin ? <Admin /> : <Home />} />
+                  <Route path="/admin" element={<Admin />} />
                 </Routes>
               </main>
               <Footer />
