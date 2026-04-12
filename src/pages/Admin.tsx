@@ -219,9 +219,11 @@ export default function Admin() {
   const handleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      alert("Login failed! Please try opening the site in a new tab (click the arrow icon at the top right of the preview). Error: " + error.message);
     }
   };
 

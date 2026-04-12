@@ -20,9 +20,16 @@ export default function Navbar() {
   const handleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
+      // Force account selection to ensure the user can pick their admin email
+      provider.setCustomParameters({ prompt: 'select_account' });
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      if (error.code === 'auth/popup-blocked') {
+        alert("Login popup was blocked! Please allow popups or open the site in a new tab (click the arrow icon at the top right).");
+      } else {
+        alert("Login failed: " + error.message + ". Try opening the site in a new tab.");
+      }
     }
   };
 
