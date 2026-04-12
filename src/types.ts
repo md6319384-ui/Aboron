@@ -49,6 +49,7 @@ export interface SiteSettings {
   fontFamily?: string;
   contactEmail: string;
   contactPhone: string;
+  contactAddress?: string;
   bkashNumber: string;
   nagadNumber: string;
   adminPassword?: string;

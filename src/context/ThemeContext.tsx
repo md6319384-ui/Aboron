@@ -19,6 +19,7 @@ const defaultSettings: SiteSettings = {
   fontFamily: 'Inter',
   contactEmail: 'support@shopease.com',
   contactPhone: '01813408362',
+  contactAddress: 'Dhaka, Bangladesh',
   bkashNumber: '01813408362',
   nagadNumber: '01616246681',
   adminPassword: 'iloveyou123',
@@ -36,10 +37,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const docRef = doc(db, 'settings', 'site');
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
-        setSettings(docSnap.data() as SiteSettings);
+        const data = docSnap.data() as SiteSettings;
+        setSettings(data);
+        if (data.siteName) {
+          document.title = data.siteName;
+        }
       } else {
         // Initialize settings if they don't exist
         setDoc(docRef, defaultSettings);
+        document.title = defaultSettings.siteName;
       }
       setLoading(false);
     });

@@ -13,7 +13,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-white">{settings.siteName}</h3>
+            <h3 
+              className="text-2xl font-black bg-clip-text text-transparent transition-all"
+              style={{ backgroundImage: 'linear-gradient(to right, var(--primary), var(--accent))' }}
+            >
+              {settings.siteName}
+            </h3>
             <p className="text-sm leading-relaxed">
               Your one-stop destination for the latest gadgets and home decor. Quality products, delivered to your doorstep.
             </p>
@@ -60,7 +65,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center space-x-3">
                 <MapPin size={18} className="text-blue-500" />
-                <span>Dhaka, Bangladesh</span>
+                <span>{settings.contactAddress}</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone size={18} className="text-blue-500" />

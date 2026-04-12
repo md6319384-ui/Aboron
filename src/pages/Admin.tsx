@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Settings, MessageSquare, 
   Plus, Trash2, Edit, Save, X, Loader2, CheckCircle, Clock, 
   TrendingUp, Users, DollarSign, Search, Image as ImageIcon,
-  Palette, Phone, Mail, ShieldCheck, Send, Truck, Download, Upload, Type, Archive
+  Palette, Phone, Mail, ShieldCheck, Send, Truck, Download, Upload, Type, Archive, MapPin
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Product, Order, SiteSettings } from '../types';
@@ -762,7 +762,9 @@ export default function Admin() {
                   </h3>
                   <div className="space-y-6">
                     <InputGroup label="Website Name (ওয়েবসাইটের নাম)" value={settings.siteName} onChange={(v) => updateSettings({ siteName: v })} icon={<LayoutDashboard size={18} />} />
+                    <InputGroup label="Contact Phone (যোগাযোগের নম্বর)" value={settings.contactPhone} onChange={(v) => updateSettings({ contactPhone: v })} icon={<Phone size={18} />} />
                     <InputGroup label="Contact Email" value={settings.contactEmail} onChange={(v) => updateSettings({ contactEmail: v })} icon={<Mail size={18} />} />
+                    <InputGroup label="Contact Address (ঠিকানা)" value={settings.contactAddress || ''} onChange={(v) => updateSettings({ contactAddress: v })} icon={<MapPin size={18} />} />
                     <InputGroup label="bKash Number" value={settings.bkashNumber} onChange={(v) => updateSettings({ bkashNumber: v })} icon={<Phone size={18} />} />
                     <InputGroup label="Nagad Number" value={settings.nagadNumber} onChange={(v) => updateSettings({ nagadNumber: v })} icon={<Phone size={18} />} />
                     <InputGroup label="Admin Password" value={settings.adminPassword || ''} onChange={(v) => updateSettings({ adminPassword: v })} icon={<ShieldCheck size={18} />} />
@@ -894,10 +896,34 @@ export default function Admin() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Image URL</label>
-                  <div className="relative">
-                    <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input required type="text" value={productForm.image} onChange={e => setProductForm({ ...productForm, image: e.target.value })} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Product Photo (ফটো আপলোড)</label>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-20 h-20 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center overflow-hidden">
+                      {productForm.image ? (
+                        <img src={productForm.image} className="w-full h-full object-cover" alt="Preview" />
+                      ) : (
+                        <ImageIcon className="text-slate-300" size={24} />
+                      )}
+                    </div>
+                    <label className="flex-1 flex items-center justify-center space-x-2 p-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all cursor-pointer">
+                      <Upload size={18} />
+                      <span>{productForm.image ? 'Change Photo' : 'Upload Photo'}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              setProductForm({ ...productForm, image: event.target?.result as string });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }} 
+                        className="hidden" 
+                      />
+                    </label>
                   </div>
                 </div>
                 <div className="space-y-2">
