@@ -41,10 +41,15 @@ export default function OrderSuccess() {
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">Thank You!</h1>
             <p className="text-xl text-blue-600 font-bold uppercase tracking-widest mb-8">Order Confirmed</p>
             
-            <p className="text-slate-600 text-lg mb-12 max-w-md mx-auto leading-relaxed">
+            <p className="text-slate-600 text-lg mb-4 max-w-md mx-auto leading-relaxed">
               We've received your order and our team is already working on it. 
-              We'll call you shortly to confirm the delivery details.
             </p>
+
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 mb-8 max-w-md mx-auto animate-pulse">
+              <p className="text-blue-700 font-black text-lg leading-relaxed">
+                আপনার অর্ডারটি সফলভাবে কনফার্ম করা হয়েছে। কিছুক্ষণের মধ্যে আমাদের কাস্টমার কেয়ার থেকে আপনার কাছে একটি কল আসবে।
+              </p>
+            </div>
 
             <div className="bg-slate-50 rounded-[2rem] p-8 border border-slate-100 mb-12 relative group">
               <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mb-3">Your Order Tracking Code</p>

@@ -130,7 +130,13 @@ export default function Admin() {
   };
 
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
-    await updateDoc(doc(db, 'orders', orderId), { status });
+    try {
+      await updateDoc(doc(db, 'orders', orderId), { status });
+      setNotification({ message: 'Order status updated!', type: 'success' });
+    } catch (error: any) {
+      console.error("Error updating order status:", error);
+      setNotification({ message: 'Failed to update order status: ' + error.message, type: 'error' });
+    }
   };
 
   const handleExportTheme = () => {
@@ -557,7 +563,7 @@ export default function Admin() {
                       <div className="flex items-center space-x-6">
                         <div className="text-right">
                           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Customer</p>
-                          <p className="text-sm font-bold text-slate-600">{order.shippingAddress.split(',')[0]}</p>
+                          <p className="text-sm font-bold text-slate-600">{(order as any).customerName || order.shippingAddress.split(',')[0]}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total</p>
@@ -605,9 +611,13 @@ export default function Admin() {
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-6 border-t border-slate-50">
-                      <div className="space-y-2">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Shipping Address</p>
-                        <p className="text-sm text-slate-600 leading-relaxed font-medium">{order.shippingAddress}</p>
+                      <div className="space-y-3">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Customer & Shipping</p>
+                        <div className="space-y-1">
+                          <p className="text-sm font-black text-slate-900">{(order as any).customerName || 'N/A'}</p>
+                          <p className="text-xs font-bold text-blue-600">{(order as any).customerPhone || 'N/A'}</p>
+                          <p className="text-xs text-slate-600 leading-relaxed font-medium">{(order as any).customerAddress || order.shippingAddress}</p>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Payment Details</p>

@@ -15,6 +15,7 @@ export default function Checkout() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -57,6 +58,39 @@ export default function Checkout() {
     fetchProfile();
   }, [user]);
 
+  if (!user) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4">
+        <div className="w-24 h-24 bg-blue-50 text-blue-600 rounded-[2.5rem] flex items-center justify-center mb-8 shadow-xl shadow-blue-100/50">
+          <User size={48} />
+        </div>
+        <h2 className="text-3xl font-black text-slate-900 mb-4">Login Required</h2>
+        <p className="text-slate-500 mb-10 max-w-md mx-auto leading-relaxed">
+          Please login to your account to complete your purchase. You can use your email or Google account.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-sm">
+          <Link 
+            to="/" 
+            className="flex-1 px-8 py-4 bg-slate-100 text-slate-700 rounded-2xl font-bold hover:bg-slate-200 transition-all text-center"
+          >
+            Back to Shop
+          </Link>
+          <button 
+            onClick={() => {
+              // This will trigger the login modal in Navbar if we had a way to communicate, 
+              // but since we don't have a global modal state, we'll just tell them to use the login button above.
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              alert("Please click the 'Login' button at the top of the page to continue.");
+            }}
+            className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 text-center"
+          >
+            Login Now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (cart.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
@@ -75,9 +109,13 @@ export default function Checkout() {
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       const orderData = {
         userId: user ? user.uid : 'guest_' + Math.random().toString(36).substr(2, 9),
+        customerName: formData.name,
+        customerPhone: formData.phone,
+        customerAddress: formData.address,
         items: cart.map(item => ({
           productId: item.id,
           name: item.name,
@@ -102,17 +140,21 @@ export default function Checkout() {
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           await updateDoc(userRef, {
+            uid: user.uid,
             name: formData.name,
             phone: formData.phone,
             address: formData.address,
+            role: userDoc.data().role || 'customer',
             updatedAt: new Date().toISOString()
           });
         } else {
           await setDoc(userRef, {
+            uid: user.uid,
             name: formData.name,
             phone: formData.phone,
             address: formData.address,
             email: user.email,
+            role: 'customer',
             createdAt: new Date().toISOString()
           });
         }
@@ -121,8 +163,9 @@ export default function Checkout() {
       const docRef = await addDoc(collection(db, 'orders'), orderData);
       clearCart();
       navigate(`/order-success/${docRef.id}`);
-    } catch (error) {
-      console.error("Error placing order:", error);
+    } catch (err: any) {
+      console.error("Error placing order:", err);
+      setError(err.message || "Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -313,6 +356,12 @@ export default function Checkout() {
                 </motion.div>
               )}
             </div>
+
+            {error && (
+              <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm font-bold animate-in fade-in slide-in-from-top-2">
+                {error}
+              </div>
+            )}
 
             <button
               disabled={loading}
