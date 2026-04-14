@@ -11,6 +11,10 @@
         "price": { "type": "number" },
         "originalPrice": { "type": "number" },
         "image": { "type": "string" },
+        "images": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
         "category": { "type": "string" },
         "rating": { "type": "number" },
         "reviews": { "type": "number" },

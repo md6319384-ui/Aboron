@@ -37,6 +37,7 @@ export default function Admin() {
     price: 0,
     originalPrice: 0,
     image: '',
+    images: [],
     category: 'Electronics',
     stock: 10,
     rating: 4.5,
@@ -92,7 +93,7 @@ export default function Admin() {
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
-      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', category: 'Electronics', stock: 10 });
+      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], category: 'Electronics', stock: 10 });
     } catch (error) {
       console.error("Error saving product:", error);
     } finally {
@@ -457,7 +458,7 @@ export default function Admin() {
                   <button 
                     onClick={() => {
                       setEditingProduct(null);
-                      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', category: 'Electronics', stock: 10 });
+                      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], category: 'Electronics', stock: 10 });
                       setIsProductModalOpen(true);
                     }}
                     className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
@@ -924,35 +925,94 @@ export default function Admin() {
                     <input required type="number" value={productForm.stock} onChange={e => setProductForm({ ...productForm, stock: parseInt(e.target.value) })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Product Photo (ফটো আপলোড)</label>
-                  <div className="flex items-center space-x-4">
-                    <div className="w-20 h-20 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center overflow-hidden">
-                      {productForm.image ? (
-                        <img src={productForm.image} className="w-full h-full object-cover" alt="Preview" />
-                      ) : (
-                        <ImageIcon className="text-slate-300" size={24} />
-                      )}
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Product Photos (পণ্যর ফটো - সর্বোচ্চ ৩টি)</label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* Main Image */}
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Main Photo</p>
+                      <div className="relative aspect-square bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center overflow-hidden group">
+                        {productForm.image ? (
+                          <>
+                            <img src={productForm.image} className="w-full h-full object-cover" alt="Main" />
+                            <button 
+                              type="button"
+                              onClick={() => setProductForm({ ...productForm, image: '' })}
+                              className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X size={12} />
+                            </button>
+                          </>
+                        ) : (
+                          <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
+                            <Upload size={20} className="text-slate-300 mb-1" />
+                            <span className="text-[10px] font-bold text-slate-400">Upload</span>
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    setProductForm({ ...productForm, image: event.target?.result as string });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }} 
+                              className="hidden" 
+                            />
+                          </label>
+                        )}
+                      </div>
                     </div>
-                    <label className="flex-1 flex items-center justify-center space-x-2 p-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all cursor-pointer">
-                      <Upload size={18} />
-                      <span>{productForm.image ? 'Change Photo' : 'Upload Photo'}</span>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              setProductForm({ ...productForm, image: event.target?.result as string });
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }} 
-                        className="hidden" 
-                      />
-                    </label>
+
+                    {/* Additional Images */}
+                    {[0, 1].map((index) => (
+                      <div key={index} className="space-y-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase text-center">Photo {index + 2}</p>
+                        <div className="relative aspect-square bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-center overflow-hidden group">
+                          {productForm.images?.[index] ? (
+                            <>
+                              <img src={productForm.images[index]} className="w-full h-full object-cover" alt={`Extra ${index}`} />
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  const newImages = [...(productForm.images || [])];
+                                  newImages.splice(index, 1);
+                                  setProductForm({ ...productForm, images: newImages });
+                                }}
+                                className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={12} />
+                              </button>
+                            </>
+                          ) : (
+                            <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
+                              <Plus size={20} className="text-slate-300 mb-1" />
+                              <span className="text-[10px] font-bold text-slate-400">Add</span>
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      const newImages = [...(productForm.images || [])];
+                                      newImages[index] = event.target?.result as string;
+                                      setProductForm({ ...productForm, images: newImages });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }} 
+                                className="hidden" 
+                              />
+                            </label>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <div className="space-y-2">

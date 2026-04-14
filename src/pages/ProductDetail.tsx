@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Product } from '../types';
 import CheckoutModal from '../components/CheckoutModal';
+import { cn } from '../lib/utils';
 
 import { useCart } from '../context/CartContext';
 import CartDrawer from '../components/CartDrawer';
@@ -18,6 +19,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [activeImage, setActiveImage] = useState<string>('');
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -26,7 +28,9 @@ export default function ProductDetail() {
         const docRef = doc(db, 'products', id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setProduct({ id: docSnap.id, ...docSnap.data() } as Product);
+          const data = { id: docSnap.id, ...docSnap.data() } as Product;
+          setProduct(data);
+          setActiveImage(data.image);
         }
       } catch (error) {
         console.error("Error fetching product:", error);
@@ -57,6 +61,8 @@ export default function ProductDetail() {
     );
   }
 
+  const allImages = [product.image, ...(product.images || [])].filter(Boolean);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
       <CheckoutModal 
@@ -82,24 +88,36 @@ export default function ProductDetail() {
         >
           <div className="aspect-[4/3] rounded-[2.5rem] overflow-hidden bg-gray-100 border border-gray-100">
             <img
-              src={product.image}
+              src={activeImage || product.image}
               alt={product.name}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />
           </div>
-          <div className="grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-square rounded-2xl overflow-hidden bg-gray-100 border border-gray-100 cursor-pointer hover:border-primary transition-colors">
-                <img
-                  src={`${product.image}?sig=${i}`}
-                  alt={`${product.name} view ${i}`}
-                  className="w-full h-full object-cover opacity-60 hover:opacity-100 transition-opacity"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-            ))}
-          </div>
+          {allImages.length > 1 && (
+            <div className="grid grid-cols-4 gap-4">
+              {allImages.map((img, i) => (
+                <div 
+                  key={i} 
+                  onClick={() => setActiveImage(img)}
+                  className={cn(
+                    "aspect-square rounded-2xl overflow-hidden bg-gray-100 border cursor-pointer transition-all",
+                    activeImage === img ? "border-blue-600 ring-2 ring-blue-100" : "border-gray-100 hover:border-blue-300"
+                  )}
+                >
+                  <img
+                    src={img}
+                    alt={`${product.name} view ${i}`}
+                    className={cn(
+                      "w-full h-full object-cover transition-opacity",
+                      activeImage === img ? "opacity-100" : "opacity-60 hover:opacity-100"
+                    )}
+                    referrerPolicy="no-referrer"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Product Info */}
