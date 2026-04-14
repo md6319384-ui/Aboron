@@ -81,7 +81,8 @@ export default function CheckoutModal({ isOpen, onClose, product, quantity }: Ch
           name: product.name,
           price: product.price,
           quantity: quantity,
-          image: product.image
+          image: product.image,
+          size: product.selectedSize
         }],
         total: total,
         status: 'pending',
@@ -163,7 +164,10 @@ export default function CheckoutModal({ isOpen, onClose, product, quantity }: Ch
                     <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded-xl" referrerPolicy="no-referrer" />
                     <div>
                       <p className="font-bold text-slate-900 line-clamp-1">{product.name}</p>
-                      <p className="text-sm text-slate-500">Qty: {quantity} • Total: ৳{total.toFixed(2)}</p>
+                      <p className="text-sm text-slate-500">
+                        Qty: {quantity} • Total: ৳{total.toFixed(2)}
+                        {product.selectedSize && ` • Size: ${product.selectedSize}`}
+                      </p>
                     </div>
                   </div>
 

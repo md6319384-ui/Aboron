@@ -70,25 +70,32 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                           <div className="flex justify-between items-start">
                             <h3 className="text-sm font-bold text-slate-900 line-clamp-1 leading-tight">{item.name}</h3>
                             <button
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => removeFromCart(item.id, item.selectedSize)}
                               className="p-1 text-slate-300 hover:text-red-500 transition-colors"
                             >
                               <Trash2 size={14} />
                             </button>
                           </div>
-                          <p className="text-xs font-bold text-blue-600 mt-0.5">৳{item.price.toFixed(2)}</p>
+                          <div className="flex items-center space-x-2 mt-0.5">
+                            <p className="text-xs font-bold text-blue-600">৳{item.price.toFixed(2)}</p>
+                            {item.selectedSize && (
+                              <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-black rounded uppercase">
+                                Size: {item.selectedSize}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center border border-slate-200 rounded-lg p-0.5 bg-white shadow-sm">
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedSize)}
                               className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
                             >
                               <Minus size={10} />
                             </button>
                             <span className="w-6 text-center text-[11px] font-black text-slate-900">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedSize)}
                               className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors"
                             >
                               <Plus size={10} />

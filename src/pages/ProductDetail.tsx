@@ -20,6 +20,7 @@ export default function ProductDetail() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeImage, setActiveImage] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>('');
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -68,7 +69,7 @@ export default function ProductDetail() {
       <CheckoutModal 
         isOpen={isCheckoutOpen} 
         onClose={() => setIsCheckoutOpen(false)} 
-        product={product} 
+        product={{ ...product, selectedSize }} 
         quantity={quantity} 
       />
       
@@ -171,6 +172,28 @@ export default function ProductDetail() {
             <p className="text-lg text-gray-600 leading-relaxed mb-10">
               {product.description}
             </p>
+
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="mb-8">
+                <p className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4">Select Size</p>
+                <div className="flex flex-wrap gap-3">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={cn(
+                        "min-w-[3rem] h-12 px-4 rounded-xl font-bold text-sm transition-all border-2",
+                        selectedSize === size
+                          ? "border-blue-600 bg-blue-50 text-blue-600 shadow-lg shadow-blue-100"
+                          : "border-slate-100 hover:border-slate-200 text-slate-600"
+                      )}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-6 mb-10">
@@ -194,7 +217,11 @@ export default function ProductDetail() {
                 <button 
                   onClick={() => {
                     if (product) {
-                      addToCart(product, quantity);
+                      if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+                        alert('Please select a size first!');
+                        return;
+                      }
+                      addToCart({ ...product, selectedSize }, quantity);
                       setIsCartOpen(true);
                     }
                   }}
@@ -206,7 +233,10 @@ export default function ProductDetail() {
                 <button 
                   onClick={() => {
                     if (product) {
-                      addToCart(product, quantity);
+                      if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+                        alert('Please select a size first!');
+                        return;
+                      }
                       setIsCheckoutOpen(true);
                     }
                   }}

@@ -38,6 +38,7 @@ export default function Admin() {
     originalPrice: 0,
     image: '',
     images: [],
+    sizes: [],
     category: 'Electronics',
     stock: 10,
     rating: 4.5,
@@ -48,6 +49,7 @@ export default function Admin() {
   const [supportQuery, setSupportQuery] = useState('');
   const [supportResponse, setSupportResponse] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [newSize, setNewSize] = useState('');
 
   // Password Protection State
   const [passwordInput, setPasswordInput] = useState('');
@@ -93,7 +95,7 @@ export default function Admin() {
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
-      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], category: 'Electronics', stock: 10 });
+      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], sizes: [], category: 'Electronics', stock: 10 });
     } catch (error) {
       console.error("Error saving product:", error);
     } finally {
@@ -458,7 +460,7 @@ export default function Admin() {
                   <button 
                     onClick={() => {
                       setEditingProduct(null);
-                      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], category: 'Electronics', stock: 10 });
+                      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], sizes: [], category: 'Electronics', stock: 10 });
                       setIsProductModalOpen(true);
                     }}
                     className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
@@ -1013,6 +1015,57 @@ export default function Admin() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Available Sizes (সাইজ যোগ করুন)</label>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {productForm.sizes?.map((size, index) => (
+                      <div key={index} className="flex items-center space-x-1 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg border border-blue-100 group">
+                        <span className="text-xs font-bold">{size}</span>
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            const newSizes = productForm.sizes?.filter((_, i) => i !== index);
+                            setProductForm({ ...productForm, sizes: newSizes });
+                          }}
+                          className="text-blue-400 hover:text-red-500 transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex space-x-2">
+                    <input 
+                      type="text" 
+                      placeholder="e.g. XL, 42, M" 
+                      value={newSize}
+                      onChange={(e) => setNewSize(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (newSize.trim()) {
+                            setProductForm({ ...productForm, sizes: [...(productForm.sizes || []), newSize.trim()] });
+                            setNewSize('');
+                          }
+                        }
+                      }}
+                      className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        if (newSize.trim()) {
+                          setProductForm({ ...productForm, sizes: [...(productForm.sizes || []), newSize.trim()] });
+                          setNewSize('');
+                        }
+                      }}
+                      className="px-4 py-2 bg-slate-900 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition-all"
+                    >
+                      Add Size
+                    </button>
                   </div>
                 </div>
                 <div className="space-y-2">

@@ -10,6 +10,8 @@ export interface Product {
   rating: number;
   reviews: number;
   stock: number;
+  sizes?: string[];
+  selectedSize?: string;
 }
 
 export interface Order {
@@ -21,6 +23,7 @@ export interface Order {
     price: number;
     name: string;
     image?: string;
+    size?: string;
   }[];
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered';

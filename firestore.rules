@@ -61,6 +61,7 @@ service cloud.firestore {
              (!('originalPrice' in data) || (data.originalPrice is number && data.originalPrice >= 0)) &&
              data.image is string && data.image.size() > 0 &&
              (!('images' in data) || (data.images is list && data.images.size() <= 3)) &&
+             (!('sizes' in data) || (data.sizes is list && data.sizes.size() <= 10)) &&
              data.category is string &&
              data.stock is number && data.stock >= 0;
     }

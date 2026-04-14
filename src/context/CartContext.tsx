@@ -8,8 +8,8 @@ interface CartItem extends Product {
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product, quantity: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: string, selectedSize?: string) => void;
+  updateQuantity: (productId: string, quantity: number, selectedSize?: string) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -29,10 +29,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = (product: Product, quantity: number) => {
     setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
+      const existingItem = prevCart.find(item => 
+        item.id === product.id && item.selectedSize === product.selectedSize
+      );
       if (existingItem) {
         return prevCart.map(item =>
-          item.id === product.id
+          item.id === product.id && item.selectedSize === product.selectedSize
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
@@ -41,15 +43,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prevCart => prevCart.filter(item => item.id !== productId));
+  const removeFromCart = (productId: string, selectedSize?: string) => {
+    setCart(prevCart => prevCart.filter(item => 
+      !(item.id === productId && item.selectedSize === selectedSize)
+    ));
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number, selectedSize?: string) => {
     if (quantity < 1) return;
     setCart(prevCart =>
       prevCart.map(item =>
-        item.id === productId ? { ...item, quantity } : item
+        (item.id === productId && item.selectedSize === selectedSize) ? { ...item, quantity } : item
       )
     );
   };

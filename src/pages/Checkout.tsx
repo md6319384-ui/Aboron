@@ -121,7 +121,8 @@ export default function Checkout() {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          image: item.image
+          image: item.image,
+          size: item.selectedSize
         })),
         total: totalPrice,
         status: 'pending',
@@ -191,10 +192,13 @@ export default function Checkout() {
                   </div>
                   <div className="flex-grow">
                     <p className="font-bold text-slate-900 line-clamp-1">{item.name}</p>
-                    <p className="text-sm text-slate-500">Qty: {item.quantity} • ৳{(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-sm text-slate-500">
+                      Qty: {item.quantity} • ৳{(item.price * item.quantity).toFixed(2)}
+                      {item.selectedSize && ` • Size: ${item.selectedSize}`}
+                    </p>
                   </div>
                   <button 
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => removeFromCart(item.id, item.selectedSize)}
                     className="p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover/item:opacity-100"
                     title="Remove Item"
                   >

@@ -18,7 +18,11 @@
         "category": { "type": "string" },
         "rating": { "type": "number" },
         "reviews": { "type": "number" },
-        "stock": { "type": "number" }
+        "stock": { "type": "number" },
+        "sizes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
       },
       "required": ["name", "price", "image", "category", "stock"]
     },
@@ -37,7 +41,9 @@
               "productId": { "type": "string" },
               "quantity": { "type": "number" },
               "price": { "type": "number" },
-              "name": { "type": "string" }
+              "name": { "type": "string" },
+              "image": { "type": "string" },
+              "size": { "type": "string" }
             }
           }
         },
