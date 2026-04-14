@@ -35,6 +35,7 @@ export default function Admin() {
     name: '',
     description: '',
     price: 0,
+    originalPrice: 0,
     image: '',
     category: 'Electronics',
     stock: 10,
@@ -91,7 +92,7 @@ export default function Admin() {
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
-      setProductForm({ name: '', description: '', price: 0, image: '', category: 'Electronics', stock: 10 });
+      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', category: 'Electronics', stock: 10 });
     } catch (error) {
       console.error("Error saving product:", error);
     } finally {
@@ -387,10 +388,10 @@ export default function Admin() {
           {activeTab === 'dashboard' && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard icon={<DollarSign className="text-green-600" />} label="Total Revenue" value={`$${orders.reduce((acc, o) => acc + o.total, 0).toFixed(2)}`} trend="+12.5%" />
+                <StatCard icon={<DollarSign className="text-green-600" />} label="Total Revenue" value={`৳${orders.reduce((acc, o) => acc + o.total, 0).toFixed(2)}`} trend="+12.5%" />
                 <StatCard icon={<ShoppingCart className="text-blue-600" />} label="Total Orders" value={orders.length.toString()} trend="+8.2%" />
                 <StatCard icon={<Package className="text-orange-600" />} label="Products" value={products.length.toString()} />
-                <StatCard icon={<TrendingUp className="text-purple-600" />} label="Avg. Order" value={`$${(orders.reduce((acc, o) => acc + o.total, 0) / (orders.length || 1)).toFixed(2)}`} />
+                <StatCard icon={<TrendingUp className="text-purple-600" />} label="Avg. Order" value={`৳${(orders.reduce((acc, o) => acc + o.total, 0) / (orders.length || 1)).toFixed(2)}`} />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -456,7 +457,7 @@ export default function Admin() {
                   <button 
                     onClick={() => {
                       setEditingProduct(null);
-                      setProductForm({ name: '', description: '', price: 0, image: '', category: 'Electronics', stock: 10 });
+                      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', category: 'Electronics', stock: 10 });
                       setIsProductModalOpen(true);
                     }}
                     className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
@@ -488,7 +489,21 @@ export default function Admin() {
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-500">{product.category}</td>
-                        <td className="px-6 py-4 font-black text-slate-900">${product.price.toFixed(2)}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-black text-slate-900">৳{product.price.toFixed(2)}</span>
+                              {product.originalPrice && product.originalPrice > product.price && (
+                                <span className="px-1.5 py-0.5 bg-red-50 text-red-600 text-[8px] font-black rounded uppercase">
+                                  -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                                </span>
+                              )}
+                            </div>
+                            {product.originalPrice && product.originalPrice > product.price && (
+                              <span className="text-[10px] text-slate-400 line-through">৳{product.originalPrice.toFixed(2)}</span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
                           <span className={cn(
                             "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
@@ -897,8 +912,12 @@ export default function Admin() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Price ($)</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Sale Price (৳) (অফার দাম)</label>
                     <input required type="number" step="0.01" value={productForm.price} onChange={e => setProductForm({ ...productForm, price: parseFloat(e.target.value) })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Regular Price (৳) (আসল দাম)</label>
+                    <input type="number" step="0.01" value={productForm.originalPrice} onChange={e => setProductForm({ ...productForm, originalPrice: parseFloat(e.target.value) })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Stock</label>

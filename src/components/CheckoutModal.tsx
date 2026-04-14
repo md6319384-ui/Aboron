@@ -163,7 +163,7 @@ export default function CheckoutModal({ isOpen, onClose, product, quantity }: Ch
                     <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded-xl" referrerPolicy="no-referrer" />
                     <div>
                       <p className="font-bold text-slate-900 line-clamp-1">{product.name}</p>
-                      <p className="text-sm text-slate-500">Qty: {quantity} • Total: ${total.toFixed(2)}</p>
+                      <p className="text-sm text-slate-500">Qty: {quantity} • Total: ৳{total.toFixed(2)}</p>
                     </div>
                   </div>
 
@@ -274,7 +274,7 @@ export default function CheckoutModal({ isOpen, onClose, product, quantity }: Ch
                             {formData.paymentMethod === 'bkash' ? '01813408362' : '01616246681'}
                           </p>
                         </div>
-                        <p className="text-[10px] text-slate-500">Send <span className="font-bold text-slate-900">${total.toFixed(2)}</span> to this {formData.paymentMethod} number.</p>
+                        <p className="text-[10px] text-slate-500">Send <span className="font-bold text-slate-900">৳{total.toFixed(2)}</span> to this {formData.paymentMethod} number.</p>
                       </div>
 
                       <div className="grid grid-cols-1 gap-2">
@@ -307,7 +307,7 @@ export default function CheckoutModal({ isOpen, onClose, product, quantity }: Ch
                   <div className="pt-4 border-t border-slate-100">
                     <div className="flex justify-between mb-4">
                       <span className="text-slate-500 text-sm font-medium">Total Amount</span>
-                      <span className="text-xl font-black text-slate-900">${total.toFixed(2)}</span>
+                      <span className="text-xl font-black text-slate-900">৳{total.toFixed(2)}</span>
                     </div>
                     <button
                       disabled={loading}

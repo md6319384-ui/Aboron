@@ -191,7 +191,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex-grow">
                     <p className="font-bold text-slate-900 line-clamp-1">{item.name}</p>
-                    <p className="text-sm text-slate-500">Qty: {item.quantity} • ${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-sm text-slate-500">Qty: {item.quantity} • ৳{(item.price * item.quantity).toFixed(2)}</p>
                   </div>
                   <button 
                     onClick={() => removeFromCart(item.id)}
@@ -206,7 +206,7 @@ export default function Checkout() {
             <div className="pt-6 border-t border-slate-200 space-y-2">
               <div className="flex justify-between text-slate-500">
                 <span>Subtotal</span>
-                <span>${totalPrice.toFixed(2)}</span>
+                <span>৳{totalPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-slate-500">
                 <span>Shipping</span>
@@ -214,7 +214,7 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between items-center pt-4">
                 <span className="text-xl font-bold text-slate-900">Total</span>
-                <span className="text-3xl font-black text-slate-900">${totalPrice.toFixed(2)}</span>
+                <span className="text-3xl font-black text-slate-900">৳{totalPrice.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function Checkout() {
                     <p className="text-2xl font-black text-slate-900">
                       {formData.paymentMethod === 'bkash' ? '01813408362' : '01616246681'}
                     </p>
-                    <p className="text-xs text-slate-500">Send <span className="font-bold text-slate-900">${totalPrice.toFixed(2)}</span> to this {formData.paymentMethod} number.</p>
+                    <p className="text-xs text-slate-500">Send <span className="font-bold text-slate-900">৳{totalPrice.toFixed(2)}</span> to this {formData.paymentMethod} number.</p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3">

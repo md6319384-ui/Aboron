@@ -138,7 +138,17 @@ export default function ProductDetail() {
               <span className="text-sm font-medium text-gray-500">{product.rating} ({product.reviews} customer reviews)</span>
             </div>
 
-            <p className="text-3xl font-bold text-gray-900 mb-8">${product.price.toFixed(2)}</p>
+            <div className="flex items-baseline space-x-4 mb-8">
+              <p className="text-4xl font-black text-slate-900">৳{product.price.toFixed(2)}</p>
+              {product.originalPrice && product.originalPrice > product.price && (
+                <>
+                  <p className="text-xl text-slate-400 line-through">৳{product.originalPrice.toFixed(2)}</p>
+                  <span className="px-3 py-1 bg-red-100 text-red-600 text-xs font-black rounded-lg">
+                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                  </span>
+                </>
+              )}
+            </div>
             
             <p className="text-lg text-gray-600 leading-relaxed mb-10">
               {product.description}

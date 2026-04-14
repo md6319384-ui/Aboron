@@ -76,7 +76,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               <Trash2 size={14} />
                             </button>
                           </div>
-                          <p className="text-xs font-bold text-blue-600 mt-0.5">${item.price.toFixed(2)}</p>
+                          <p className="text-xs font-bold text-blue-600 mt-0.5">৳{item.price.toFixed(2)}</p>
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center border border-slate-200 rounded-lg p-0.5 bg-white shadow-sm">
@@ -94,7 +94,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                               <Plus size={10} />
                             </button>
                           </div>
-                          <p className="text-sm font-black text-slate-900">${(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="text-sm font-black text-slate-900">৳{(item.price * item.quantity).toFixed(2)}</p>
                         </div>
                       </div>
                     </div>
@@ -108,7 +108,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 <div className="flex justify-between items-center px-1">
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Amount</span>
-                    <span className="text-xl font-black text-slate-900">${totalPrice.toFixed(2)}</span>
+                    <span className="text-xl font-black text-slate-900">৳{totalPrice.toFixed(2)}</span>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-green-600 font-bold flex items-center justify-end">

@@ -34,8 +34,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-bold text-blue-600 shadow-sm">
-            {product.category}
+          <div className="absolute top-3 right-3 flex flex-col items-end space-y-2">
+            <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-[10px] font-bold text-blue-600 shadow-sm uppercase tracking-wider">
+              {product.category}
+            </div>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <div className="bg-red-600 text-white px-2 py-1 rounded-lg text-[10px] font-black shadow-lg shadow-red-100 animate-pulse">
+                {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+              </div>
+            )}
           </div>
         </Link>
 
@@ -55,7 +62,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             {product.description}
           </p>
 
-          <p className="text-xl font-bold text-gray-900 mb-4">${product.price.toFixed(2)}</p>
+          <div className="flex items-baseline space-x-2 mb-4">
+            <p className="text-xl font-bold text-gray-900">৳{product.price.toFixed(2)}</p>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <p className="text-sm text-gray-400 line-through">৳{product.originalPrice.toFixed(2)}</p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-2 mt-4">
             <button 
