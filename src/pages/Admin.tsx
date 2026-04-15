@@ -90,14 +90,20 @@ export default function Admin() {
         setNotification({ message: 'Product updated successfully!', type: 'success' });
       } else {
         const newDoc = doc(collection(db, 'products'));
-        await setDoc(newDoc, { ...productForm, id: newDoc.id });
+        // Ensure we don't accidentally send an old ID
+        const { id: _, ...formWithoutId } = productForm;
+        await setDoc(newDoc, { ...formWithoutId, id: newDoc.id });
         setNotification({ message: 'Product added successfully!', type: 'success' });
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
       setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], sizes: [], category: 'Electronics', stock: 10 });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving product:", error);
+      setNotification({ 
+        message: 'Failed to save product: ' + (error.message || 'Unknown error'), 
+        type: 'error' 
+      });
     } finally {
       setLoading(false);
     }
@@ -955,6 +961,10 @@ export default function Admin() {
                               onChange={(e) => {
                                 const file = e.target.files?.[0];
                                 if (file) {
+                                  if (file.size > 800 * 1024) { // 800KB limit
+                                    setNotification({ message: 'Image is too large! Please use a smaller image (max 800KB).', type: 'error' });
+                                    return;
+                                  }
                                   const reader = new FileReader();
                                   reader.onload = (event) => {
                                     setProductForm({ ...productForm, image: event.target?.result as string });
@@ -999,11 +1009,21 @@ export default function Admin() {
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
+                                    if (file.size > 800 * 1024) { // 800KB limit
+                                      setNotification({ message: 'Image is too large! Please use a smaller image (max 800KB).', type: 'error' });
+                                      return;
+                                    }
                                     const reader = new FileReader();
                                     reader.onload = (event) => {
                                       const newImages = [...(productForm.images || [])];
+                                      // Ensure we don't have holes in the array
+                                      while (newImages.length <= index) {
+                                        newImages.push('');
+                                      }
                                       newImages[index] = event.target?.result as string;
-                                      setProductForm({ ...productForm, images: newImages });
+                                      // Filter out any empty strings that might have been added as placeholders
+                                      const compactImages = newImages.filter(img => img !== '');
+                                      setProductForm({ ...productForm, images: compactImages });
                                     };
                                     reader.readAsDataURL(file);
                                   }
