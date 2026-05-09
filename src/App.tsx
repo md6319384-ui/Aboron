@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect, useState, createContext, useContext } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
+import { doc, setDoc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -40,6 +41,28 @@ export default function App() {
       setIsAdmin(user?.email === ADMIN_EMAIL);
       setLoading(false);
     });
+
+    // Visitor Tracking - Using localStorage to count only once per device ever
+    const trackVisit = async () => {
+      const hasVisited = localStorage.getItem('hasVisited_v2'); // New key for better tracking
+      if (!hasVisited) {
+        try {
+          const statsRef = doc(db, 'stats', 'visitors');
+          // Use a simple atomic increment update without read if possible, 
+          // but we need to ensure it exists.
+          await updateDoc(statsRef, { count: increment(1) }).catch(async (err) => {
+            if (err.code === 'not-found') {
+              await setDoc(statsRef, { count: 1 });
+            }
+          });
+          localStorage.setItem('hasVisited_v2', 'true');
+        } catch (error) {
+          console.error("Error tracking visit:", error);
+        }
+      }
+    };
+    trackVisit();
+
     return () => unsubscribe();
   }, []);
 

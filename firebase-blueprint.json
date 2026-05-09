@@ -66,6 +66,14 @@
         "role": { "type": "string", "enum": ["admin", "customer"] }
       },
       "required": ["uid", "email", "role"]
+    },
+    "Stat": {
+      "title": "Stat",
+      "description": "Website statistics.",
+      "type": "object",
+      "properties": {
+        "count": { "type": "number" }
+      }
     }
   },
   "firestore": {
@@ -80,6 +88,10 @@
     "/users/{userId}": {
       "schema": "User",
       "description": "Collection of user profiles."
+    },
+    "/stats/{docId}": {
+      "schema": "Stat",
+      "description": "Collection of website statistics."
     }
   }
 }

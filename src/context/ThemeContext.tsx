@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { SiteSettings } from '../types';
-import { doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface ThemeContextType {
@@ -10,14 +10,15 @@ interface ThemeContextType {
 }
 
 const defaultSettings: SiteSettings = {
-  siteName: 'ShopEase',
-  primaryColor: '#2563eb', // blue-600
-  secondaryColor: '#0f172a', // slate-900
-  accentColor: '#f43f5e', // rose-500
+  siteName: 'My Webstore',
+  siteDescription: 'Premium quality products at best prices.',
+  primaryColor: '#f85606',
+  secondaryColor: '#1a1a1a',
+  accentColor: '#fbbf24',
   logoUrl: '',
   bannerUrl: '',
   fontFamily: 'Inter',
-  contactEmail: 'support@shopease.com',
+  contactEmail: 'support@example.com',
   contactPhone: '01813408362',
   contactAddress: 'Dhaka, Bangladesh',
   bkashNumber: '01813408362',
@@ -34,23 +35,30 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const docRef = doc(db, 'settings', 'site');
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data() as SiteSettings;
-        setSettings(data);
-        if (data.siteName) {
-          document.title = data.siteName;
+    const fetchSettings = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'site');
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data() as SiteSettings;
+          setSettings(data);
+          if (data.siteName) {
+            document.title = data.siteName;
+          }
+        } else {
+          // Initialize settings if they don't exist
+          await setDoc(docRef, defaultSettings);
+          document.title = defaultSettings.siteName;
         }
-      } else {
-        // Initialize settings if they don't exist
-        setDoc(docRef, defaultSettings);
-        document.title = defaultSettings.siteName;
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchSettings();
   }, []);
 
   const updateSettings = async (newSettings: Partial<SiteSettings>) => {

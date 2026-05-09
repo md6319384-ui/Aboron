@@ -20,7 +20,7 @@ export default function Footer() {
               {settings.siteName}
             </h3>
             <p className="text-sm leading-relaxed">
-              Your one-stop destination for the latest gadgets and home decor. Quality products, delivered to your doorstep.
+              {settings.siteDescription || 'Your one-stop destination for quality lifestyle products.'}
             </p>
             <div className="flex space-x-4 pt-2">
               <a href="#" className="hover:text-blue-500 transition-colors"><Facebook size={20} /></a>

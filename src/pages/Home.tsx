@@ -31,16 +31,9 @@ export default function Home() {
         ...doc.data()
       })) as Product[];
       
-      if (productsData.length === 0) {
-        // Seed mock data if empty
-        MOCK_PRODUCTS.forEach(async (product) => {
-          const { id, ...rest } = product;
-          await addDoc(collection(db, 'products'), rest);
-        });
-      } else {
-        setProducts(productsData);
-        setLoading(false);
-      }
+      // Reverse so newest products appear first
+      setProducts([...productsData].reverse());
+      setLoading(false);
     }, (error) => {
       console.error("Error fetching products:", error);
       setLoading(false);
@@ -212,7 +205,6 @@ export default function Home() {
           ) : (
             products
               .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
-              .slice(0, 8)
               .map((product) => (
                 <div key={product.id}>
                   <ProductCard product={product} />
@@ -241,7 +233,7 @@ export default function Home() {
               <Loader2 className="animate-spin text-blue-600" size={40} />
             </div>
           ) : (
-            products.slice(4, 12).map((product) => (
+            products.map((product) => (
               <div key={product.id}>
                 <ProductCard product={product} />
               </div>

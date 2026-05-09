@@ -21,9 +21,20 @@ import { auth } from '../firebase';
 export default function Admin() {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const { settings, updateSettings } = useTheme();
+  const [localSettings, setLocalSettings] = useState(settings);
+
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
+
+  const handleUpdateSetting = (update: Partial<SiteSettings>) => {
+    setLocalSettings(prev => ({ ...prev, ...update }));
+    updateSettings(update);
+  };
   const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'orders' | 'settings' | 'support'>('dashboard');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [visitorCount, setVisitorCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -73,11 +84,18 @@ export default function Admin() {
       setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
     });
 
+    const unsubStats = onSnapshot(doc(db, 'stats', 'visitors'), (doc) => {
+      if (doc.exists()) {
+        setVisitorCount(doc.data().count || 0);
+      }
+    });
+
     setLoading(false);
 
     return () => {
       unsubProducts();
       unsubOrders();
+      unsubStats();
     };
   }, [isAdmin]);
 
@@ -87,17 +105,20 @@ export default function Admin() {
     try {
       if (editingProduct) {
         await updateDoc(doc(db, 'products', editingProduct.id), productForm);
+        setProducts(prev => prev.map(p => p.id === editingProduct.id ? { ...p, ...productForm } as Product : p));
         setNotification({ message: 'Product updated successfully!', type: 'success' });
       } else {
         const newDoc = doc(collection(db, 'products'));
         // Ensure we don't accidentally send an old ID
         const { id: _, ...formWithoutId } = productForm;
-        await setDoc(newDoc, { ...formWithoutId, id: newDoc.id });
+        const newProduct = { ...formWithoutId, id: newDoc.id } as Product;
+        await setDoc(newDoc, newProduct);
+        setProducts(prev => [newProduct, ...prev]);
         setNotification({ message: 'Product added successfully!', type: 'success' });
       }
       setIsProductModalOpen(false);
       setEditingProduct(null);
-      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], sizes: [], category: 'Electronics', stock: 10 });
+      setProductForm({ name: '', description: '', price: 0, originalPrice: 0, image: '', images: [], sizes: [], category: 'Lifestyle', stock: 10 });
     } catch (error: any) {
       console.error("Error saving product:", error);
       setNotification({ 
@@ -134,6 +155,44 @@ export default function Admin() {
       setNotification({ message: 'Mock products seeded successfully!', type: 'success' });
     } catch (error) {
       console.error("Error seeding products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAllProducts = async () => {
+    const confirm = window.confirm("Are you sure you want to delete ALL products? This cannot be undone.");
+    if (!confirm) return;
+
+    setLoading(true);
+    try {
+      const q = query(collection(db, 'products'));
+      const snapshot = await getDocs(q);
+      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+      setNotification({ message: 'All products deleted successfully!', type: 'success' });
+    } catch (error) {
+      console.error("Error deleting all products:", error);
+      setNotification({ message: 'Failed to delete products.', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteAllOrders = async () => {
+    const confirm = window.confirm("Are you sure you want to delete ALL orders? This cannot be undone.");
+    if (!confirm) return;
+
+    setLoading(true);
+    try {
+      const q = query(collection(db, 'orders'));
+      const snapshot = await getDocs(q);
+      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+      await Promise.all(deletePromises);
+      setNotification({ message: 'All orders deleted successfully!', type: 'success' });
+    } catch (error) {
+      console.error("Error deleting all orders:", error);
+      setNotification({ message: 'Failed to delete orders.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -399,6 +458,7 @@ export default function Admin() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard icon={<DollarSign className="text-green-600" />} label="Total Revenue" value={`৳${orders.reduce((acc, o) => acc + o.total, 0).toFixed(2)}`} trend="+12.5%" />
                 <StatCard icon={<ShoppingCart className="text-blue-600" />} label="Total Orders" value={orders.length.toString()} trend="+8.2%" />
+                <StatCard icon={<Users className="text-purple-600" />} label="Total Visitors" value={visitorCount.toLocaleString()} trend="Live" />
                 <StatCard icon={<Package className="text-orange-600" />} label="Products" value={products.length.toString()} />
                 <StatCard icon={<TrendingUp className="text-purple-600" />} label="Avg. Order" value={`৳${(orders.reduce((acc, o) => acc + o.total, 0) / (orders.length || 1)).toFixed(2)}`} />
               </div>
@@ -419,7 +479,7 @@ export default function Admin() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-black text-slate-900">${order.total.toFixed(2)}</p>
+                          <p className="text-sm font-black text-slate-900">৳{order.total.toFixed(2)}</p>
                           <p className={cn(
                             "text-[10px] font-bold uppercase tracking-wider",
                             order.status === 'delivered' ? "text-green-600" : "text-blue-600"
@@ -442,7 +502,7 @@ export default function Admin() {
                             <p className="text-[10px] text-slate-400 font-bold uppercase">{product.category}</p>
                           </div>
                         </div>
-                        <p className="text-sm font-black text-slate-900">${product.price.toFixed(2)}</p>
+                        <p className="text-sm font-black text-slate-900">৳{product.price.toFixed(2)}</p>
                       </div>
                     ))}
                   </div>
@@ -687,24 +747,90 @@ export default function Admin() {
 
           {activeTab === 'settings' && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
-              <h2 className="text-2xl font-black text-slate-900">Website Customization</h2>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <h2 className="text-2xl font-black text-slate-900">Settings</h2>
+                <div className="flex items-center space-x-2 text-[10px] font-bold text-green-600 bg-green-50 px-3 py-1.5 rounded-full uppercase tracking-widest border border-green-100">
+                  <CheckCircle size={12} />
+                  <span>Auto-saving enabled</span>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* General Customization */}
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                    <Settings className="text-blue-600" size={20} />
+                    <span>General Customization (সাধারণ সেটিংস)</span>
+                  </h3>
+                  <div className="space-y-6">
+                    <InputGroup label="Website Name (ওয়েবসাইটের নাম)" value={localSettings.siteName} onChange={(v) => handleUpdateSetting({ siteName: v })} icon={<LayoutDashboard size={18} />} />
+                    <InputGroup label="Site Tagline/Description (ওয়েবসাইটের বিবরণ)" value={localSettings.siteDescription || ''} onChange={(v) => handleUpdateSetting({ siteDescription: v })} icon={<MessageSquare size={18} />} />
+                    <InputGroup label="Admin Password" value={localSettings.adminPassword || ''} onChange={(v) => handleUpdateSetting({ adminPassword: v })} icon={<ShieldCheck size={18} />} />
+                    <InputGroup label="Contact Phone (যোগাযোগের নম্বর)" value={localSettings.contactPhone} onChange={(v) => handleUpdateSetting({ contactPhone: v })} icon={<Phone size={18} />} />
+                    <InputGroup label="Contact Email" value={localSettings.contactEmail} onChange={(v) => handleUpdateSetting({ contactEmail: v })} icon={<Mail size={18} />} />
+                    <InputGroup label="Contact Address (ঠিকানা)" value={localSettings.contactAddress || ''} onChange={(v) => handleUpdateSetting({ contactAddress: v })} icon={<MapPin size={18} />} />
+                  </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                    <Truck className="text-blue-600" size={20} />
+                    <span>Payment & Shipping</span>
+                  </h3>
+                  <div className="space-y-6">
+                    <InputGroup label="bKash Number" value={localSettings.bkashNumber} onChange={(v) => handleUpdateSetting({ bkashNumber: v })} icon={<Phone size={18} />} />
+                    <InputGroup label="Nagad Number" value={localSettings.nagadNumber} onChange={(v) => handleUpdateSetting({ nagadNumber: v })} icon={<Phone size={18} />} />
+                    
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white rounded-xl text-slate-400 border border-slate-100">
+                          <Truck size={18} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Cash on Delivery</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Enable POD</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleUpdateSetting({ allowCOD: !localSettings.allowCOD })}
+                        className="flex items-center space-x-3 group"
+                      >
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-widest transition-colors",
+                          localSettings.allowCOD ? "text-green-600" : "text-slate-400"
+                        )}>
+                          {localSettings.allowCOD ? 'Active' : 'Disabled'}
+                        </span>
+                        <div className={cn(
+                          "w-14 h-7 rounded-full transition-all relative p-1",
+                          localSettings.allowCOD ? "bg-green-500 shadow-lg shadow-green-100" : "bg-slate-200"
+                        )}>
+                          <div className={cn(
+                            "w-5 h-5 bg-white rounded-full transition-all shadow-sm",
+                            localSettings.allowCOD ? "translate-x-7" : "translate-x-0"
+                          )} />
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
                   <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
                     <Palette className="text-blue-600" size={20} />
                     <span>Theme Colors (থিম কালার)</span>
                   </h3>
                   <div className="space-y-6">
-                    <ColorInput label="Primary Color" value={settings.primaryColor} onChange={(c) => updateSettings({ primaryColor: c })} />
-                    <ColorInput label="Secondary Color" value={settings.secondaryColor} onChange={(c) => updateSettings({ secondaryColor: c })} />
-                    <ColorInput label="Accent Color" value={settings.accentColor} onChange={(c) => updateSettings({ accentColor: c })} />
-                    <InputGroup label="Font Family" value={settings.fontFamily || 'Inter'} onChange={(v) => updateSettings({ fontFamily: v })} icon={<Type size={18} />} />
+                    <ColorInput label="Primary Color" value={localSettings.primaryColor} onChange={(c) => handleUpdateSetting({ primaryColor: c })} />
+                    <ColorInput label="Secondary Color" value={localSettings.secondaryColor} onChange={(c) => handleUpdateSetting({ secondaryColor: c })} />
+                    <ColorInput label="Accent Color" value={localSettings.accentColor} onChange={(c) => handleUpdateSetting({ accentColor: c })} />
+                    <InputGroup label="Font Family" value={localSettings.fontFamily || 'Inter'} onChange={(v) => handleUpdateSetting({ fontFamily: v })} icon={<Type size={18} />} />
                     
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Default Font Size (ফন্ট সাইজ)</label>
                       <select 
-                        value={settings.fontSize || '16px'} 
-                        onChange={(e) => updateSettings({ fontSize: e.target.value })}
+                        value={localSettings.fontSize || '16px'} 
+                        onChange={(e) => handleUpdateSetting({ fontSize: e.target.value })}
                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm"
                       >
                         <option value="14px">Small (14px)</option>
@@ -791,51 +917,44 @@ export default function Admin() {
 
                 <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
                   <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
-                    <Settings className="text-blue-600" size={20} />
-                    <span>General Customization (সাধারণ সেটিংস)</span>
+                    <Archive className="text-blue-600" size={20} />
+                    <span>Data Management (ডাটা ম্যানেজমেন্ট)</span>
                   </h3>
-                  <div className="space-y-6">
-                    <InputGroup label="Website Name (ওয়েবসাইটের নাম)" value={settings.siteName} onChange={(v) => updateSettings({ siteName: v })} icon={<LayoutDashboard size={18} />} />
-                    <InputGroup label="Contact Phone (যোগাযোগের নম্বর)" value={settings.contactPhone} onChange={(v) => updateSettings({ contactPhone: v })} icon={<Phone size={18} />} />
-                    <InputGroup label="Contact Email" value={settings.contactEmail} onChange={(v) => updateSettings({ contactEmail: v })} icon={<Mail size={18} />} />
-                    <InputGroup label="Contact Address (ঠিকানা)" value={settings.contactAddress || ''} onChange={(v) => updateSettings({ contactAddress: v })} icon={<MapPin size={18} />} />
-                    <InputGroup label="bKash Number" value={settings.bkashNumber} onChange={(v) => updateSettings({ bkashNumber: v })} icon={<Phone size={18} />} />
-                    <InputGroup label="Nagad Number" value={settings.nagadNumber} onChange={(v) => updateSettings({ nagadNumber: v })} icon={<Phone size={18} />} />
-                    <InputGroup label="Admin Password" value={settings.adminPassword || ''} onChange={(v) => updateSettings({ adminPassword: v })} icon={<ShieldCheck size={18} />} />
-                    
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-white rounded-xl text-slate-400">
-                          <Truck size={18} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">Cash on Delivery</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase">Enable or disable COD</p>
-                        </div>
+                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 space-y-6">
+                    <div className="space-y-4">
+                      <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                        Quickly manage your store data. Use these options to seed sample data or clear existing data.
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button 
+                          onClick={handleSeedProducts}
+                          disabled={loading}
+                          className="flex items-center justify-center space-x-2 px-6 py-4 bg-white border border-slate-200 text-slate-900 rounded-2xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                        >
+                          {loading ? <Loader2 size={18} className="animate-spin" /> : <Package size={18} className="text-blue-600" />}
+                          <span>Restore Sample Products</span>
+                        </button>
+                        <button 
+                          onClick={handleDeleteAllProducts}
+                          disabled={loading}
+                          className="flex items-center justify-center space-x-2 px-6 py-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl font-bold text-sm hover:bg-red-100 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {loading ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                          <span>Clear All Products</span>
+                        </button>
+                        <button 
+                          onClick={handleDeleteAllOrders}
+                          disabled={loading}
+                          className="flex items-center justify-center space-x-2 px-6 py-4 bg-orange-50 border border-orange-100 text-orange-600 rounded-2xl font-bold text-sm hover:bg-orange-100 transition-all active:scale-95 disabled:opacity-50 sm:col-span-2"
+                        >
+                          {loading ? <Loader2 size={18} className="animate-spin" /> : <Archive size={18} />}
+                          <span>Clear All Orders</span>
+                        </button>
                       </div>
-                      <button 
-                        onClick={() => updateSettings({ allowCOD: !settings.allowCOD })}
-                        className="flex items-center space-x-3 group"
-                      >
-                        <span className={cn(
-                          "text-[10px] font-black uppercase tracking-widest transition-colors",
-                          settings.allowCOD ? "text-green-600" : "text-slate-400"
-                        )}>
-                          {settings.allowCOD ? 'Active' : 'Disabled'}
-                        </span>
-                        <div className={cn(
-                          "w-14 h-7 rounded-full transition-all relative p-1",
-                          settings.allowCOD ? "bg-green-500 shadow-lg shadow-green-100" : "bg-slate-200"
-                        )}>
-                          <div className={cn(
-                            "w-5 h-5 bg-white rounded-full transition-all shadow-sm",
-                            settings.allowCOD ? "translate-x-7" : "translate-x-0"
-                          )} />
-                        </div>
-                      </button>
                     </div>
                   </div>
                 </div>
+
               </div>
             </motion.div>
           )}
@@ -1092,8 +1211,16 @@ export default function Admin() {
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</label>
                   <textarea rows={4} value={productForm.description} onChange={e => setProductForm({ ...productForm, description: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
                 </div>
-                <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center space-x-2">
-                  <Save size={20} />
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={20} />
+                  ) : (
+                    <Save size={20} />
+                  )}
                   <span>{editingProduct ? 'Update Product' : 'Create Product'}</span>
                 </button>
               </form>

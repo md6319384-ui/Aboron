@@ -46,6 +46,7 @@ export interface User {
 
 export interface SiteSettings {
   siteName: string;
+  siteDescription?: string;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
