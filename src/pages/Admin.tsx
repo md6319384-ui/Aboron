@@ -888,6 +888,64 @@ export default function Admin() {
 
                 <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
                   <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                    <Settings className="text-blue-600" size={20} />
+                    <span>Advertisement Settings (বিজ্ঞাপন সেটিংস)</span>
+                  </h3>
+                  
+                  <div className="space-y-6">
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white rounded-xl text-slate-400 border border-slate-100">
+                          <Settings size={18} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Show Ads (বিজ্ঞাপন দেখান)</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Enable Monetag network</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleUpdateSetting({ showAds: !localSettings.showAds })}
+                        className="flex items-center space-x-3 group"
+                      >
+                        <span className={cn(
+                          "text-[10px] font-black uppercase tracking-widest transition-colors",
+                          localSettings.showAds ? "text-green-600" : "text-slate-400"
+                        )}>
+                          {localSettings.showAds ? 'ON' : 'OFF'}
+                        </span>
+                        <div className={cn(
+                          "w-14 h-7 rounded-full transition-all relative p-1",
+                          localSettings.showAds ? "bg-green-500 shadow-lg shadow-green-100" : "bg-slate-200"
+                        )}>
+                          <div className={cn(
+                            "w-5 h-5 bg-white rounded-full transition-all shadow-sm",
+                            localSettings.showAds ? "translate-x-7" : "translate-x-0"
+                          )} />
+                        </div>
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Ad Placement Position (বিজ্ঞাপন দেখানোর স্থান)</label>
+                      <select 
+                        value={localSettings.adPosition || 'both-sidebars'} 
+                        onChange={(e) => handleUpdateSetting({ adPosition: e.target.value as any })}
+                        disabled={!localSettings.showAds}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm disabled:opacity-50"
+                      >
+                        <option value="both-sidebars">Both Sidebars (ডান ও বাম উভয় পাশে)</option>
+                        <option value="sidebar-left">Left Sidebar Only (শুধুমাত্র বাম পাশে)</option>
+                        <option value="sidebar-right">Right Sidebar Only (শুধুমাত্র ডান পাশে)</option>
+                        <option value="top-banner">Top Banner (ওয়েবসাইটের উপরে)</option>
+                        <option value="bottom-banner">Bottom Banner (ওয়েবসাইটের নিচে)</option>
+                        <option value="popup-only">Popup & Background Ads Only (কোন ব্যানার ছাড়া)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
                     <Download className="text-blue-600" size={20} />
                     <span>Theme Management (থিম ম্যানেজমেন্ট)</span>
                   </h3>

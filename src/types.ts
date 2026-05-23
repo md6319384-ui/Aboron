@@ -61,4 +61,6 @@ export interface SiteSettings {
   adminPassword?: string;
   allowCOD?: boolean;
   fontSize?: string;
+  showAds?: boolean;
+  adPosition?: 'sidebar-left' | 'sidebar-right' | 'both-sidebars' | 'top-banner' | 'bottom-banner' | 'popup-only';
 }
