@@ -8,6 +8,7 @@ import { db } from '../firebase';
 import { cn } from '../lib/utils';
 import { useAuth } from '../App';
 import { useTheme } from '../context/ThemeContext';
+import { sendTelegramNotification } from '../utils/notifications';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -118,6 +119,19 @@ export default function CheckoutModal({ isOpen, onClose, product, quantity }: Ch
       }
 
       const docRef = await addDoc(collection(db, 'orders'), orderData);
+      
+      try {
+        await sendTelegramNotification(
+          docRef.id,
+          [{ name: product.name, price: product.price, quantity: quantity, size: product.selectedSize }],
+          total,
+          formData,
+          settings
+        );
+      } catch (tgErr) {
+        console.error("Error trigger Telegram notification on fast checkout:", tgErr);
+      }
+
       onClose();
       navigate(`/order-success/${docRef.id}`);
     } catch (error) {

@@ -28,6 +28,10 @@ const defaultSettings: SiteSettings = {
   fontSize: '16px',
   showAds: false,
   adPosition: 'both-sidebars',
+  enableTelegramNotifications: false,
+  telegramBotToken: '',
+  telegramChatId: '',
+  enableAudioNotifications: true,
 };
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

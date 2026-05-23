@@ -8,6 +8,7 @@ import { db } from '../firebase';
 import { cn } from '../lib/utils';
 import { useAuth } from '../App';
 import { useTheme } from '../context/ThemeContext';
+import { sendTelegramNotification } from '../utils/notifications';
 
 export default function Checkout() {
   const { cart, totalPrice, clearCart, removeFromCart } = useCart();
@@ -162,6 +163,19 @@ export default function Checkout() {
       }
 
       const docRef = await addDoc(collection(db, 'orders'), orderData);
+      
+      try {
+        await sendTelegramNotification(
+          docRef.id,
+          cart.map(item => ({ name: item.name, price: item.price, quantity: item.quantity, size: item.selectedSize })),
+          totalPrice,
+          formData,
+          settings
+        );
+      } catch (tgErr) {
+        console.error("Error trigger Telegram notify on checkout:", tgErr);
+      }
+
       clearCart();
       navigate(`/order-success/${docRef.id}`);
     } catch (err: any) {

@@ -14,6 +14,7 @@ import { Product, Order, SiteSettings } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import { GoogleGenAI } from "@google/genai";
 import { MOCK_PRODUCTS } from '../constants';
+import { playNotificationSound } from '../utils/notifications';
 
 import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebase';
@@ -80,8 +81,36 @@ export default function Admin() {
       setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
     });
 
+    let isInitialLoad = true;
     const unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snapshot) => {
-      setOrders(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)));
+      const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+      setOrders(ordersData);
+
+      if (!isInitialLoad) {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const newOrder = { id: change.doc.id, ...change.doc.data() } as Order;
+            
+            if (settings.enableAudioNotifications !== false) {
+              playNotificationSound();
+            }
+
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              new Notification(`🛒 New Order Received! (#${newOrder.id.slice(-6).toUpperCase()})`, {
+                body: `Total: ৳${newOrder.total}\nDelivery: ${newOrder.shippingAddress}`,
+                icon: settings.logoUrl || '/icon.png',
+              });
+            }
+
+            setNotification({
+              message: `🎉 New order received! Order ID: #${newOrder.id.slice(-6).toUpperCase()} (৳${newOrder.total})`,
+              type: 'success'
+            });
+          }
+        });
+      } else {
+        isInitialLoad = false;
+      }
     });
 
     const unsubStats = onSnapshot(doc(db, 'stats', 'visitors'), (doc) => {
@@ -940,6 +969,193 @@ export default function Admin() {
                         <option value="bottom-banner">Bottom Banner (ওয়েবসাইটের নিচে)</option>
                         <option value="popup-only">Popup & Background Ads Only (কোন ব্যানার ছাড়া)</option>
                       </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8 animate-fade-in">
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
+                    <Send className="text-blue-600 animate-pulse" size={20} />
+                    <span>Real-time Alert Settings (অর্ডার নোটিফিকেশন সেটিংস)</span>
+                  </h3>
+
+                  <div className="space-y-6">
+                    {/* HTML5 Browser System Notifications */}
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 bg-white rounded-xl text-blue-500 border border-slate-100 mt-1">
+                          <ShieldCheck size={18} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Browser System Notifications (ব্রাউজার নোটিফিকেশন)</p>
+                          <p className="text-[11px] text-slate-500">Get direct push notification alerts on your device even if your store tab is running in the background.</p>
+                        </div>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={async () => {
+                          if (Notification.permission === 'default') {
+                            const result = await Notification.requestPermission();
+                            if (result === 'granted') {
+                              new Notification("🎉 Notifications Enabled!", {
+                                body: "Real-time order alerts are now active on your browser.",
+                              });
+                            }
+                          } else if (Notification.permission === 'granted') {
+                            new Notification("🔔 Notification Test!", {
+                              body: "Browser alerts are already fully operational!",
+                            });
+                          } else {
+                            alert("Notification permission is blocked. Please unblock notifications for this site in your browser settings.");
+                          }
+                          setLocalSettings({ ...localSettings });
+                        }}
+                        className={cn(
+                          "px-5 py-2.5 rounded-xl font-bold text-xs transition-colors tracking-wide active:scale-95 shrink-0",
+                          Notification.permission === 'granted' 
+                            ? "bg-green-50 text-green-700 border border-green-200 hover:bg-green-100" 
+                            : "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-100"
+                        )}
+                      >
+                        {Notification.permission === 'granted' ? '✔️ Status: Active (চালু আছে)' : 'Enable Browser Alerts'}
+                      </button>
+                    </div>
+
+                    {/* Audio Sound Alert Tone switcher */}
+                    <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 flex items-center justify-between col-span-1 border-t-0">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-white rounded-xl text-indigo-500 border border-slate-100">
+                          <Type size={18} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Audio Alarm Sounds (সাউন্ড নোটিফিকেশন)</p>
+                          <p className="text-[11px] text-slate-500">Play a cash-register "ding-chink" sound alert tone automatically when a new order arrives.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            playNotificationSound();
+                          }}
+                          className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl font-extrabold text-[10px] text-slate-600 uppercase tracking-widest active:scale-95 transition-all"
+                        >
+                          🔊 Test Sound
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => handleUpdateSetting({ enableAudioNotifications: !localSettings.enableAudioNotifications })}
+                          className="flex items-center space-x-2"
+                        >
+                          <div className={cn(
+                            "w-12 h-6 rounded-full transition-all relative p-1",
+                            localSettings.enableAudioNotifications !== false ? "bg-green-500 shadow-md shadow-green-100" : "bg-slate-200"
+                          )}>
+                            <div className={cn(
+                              "w-4 h-4 bg-white rounded-full transition-all shadow-sm",
+                              localSettings.enableAudioNotifications !== false ? "translate-x-6" : "translate-x-0"
+                            )} />
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <hr className="border-slate-100" />
+
+                    {/* Telegram API configurations integration */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-blue-50 text-blue-600 rounded-xl border border-blue-50">
+                            <Send size={18} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">Telegram Bot Notifications (টেলিগ্রাম নোটিফিকেশন)</p>
+                            <p className="text-[11px] text-slate-400">Receive 100% real-time order receipts straight to your mobile/PC via Telegram.</p>
+                          </div>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => handleUpdateSetting({ enableTelegramNotifications: !localSettings.enableTelegramNotifications })}
+                          className="flex items-center space-x-2"
+                        >
+                          <div className={cn(
+                            "w-12 h-6 rounded-full transition-all relative p-1",
+                            localSettings.enableTelegramNotifications ? "bg-green-500 shadow-md shadow-green-100" : "bg-slate-200"
+                          )}>
+                            <div className={cn(
+                              "w-4 h-4 bg-white rounded-full transition-all shadow-sm",
+                              localSettings.enableTelegramNotifications ? "translate-x-6" : "translate-x-0"
+                            )} />
+                          </div>
+                        </button>
+                      </div>
+
+                      {localSettings.enableTelegramNotifications && (
+                        <div className="pl-3 space-y-4 pt-2 border-l-2 border-slate-100">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Telegram Bot Token</label>
+                              <input 
+                                type="text"
+                                value={localSettings.telegramBotToken || ''}
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, telegramBotToken: e.target.value }))}
+                                onBlur={() => handleUpdateSetting({ telegramBotToken: localSettings.telegramBotToken })}
+                                placeholder="E.g., 123456789:ABCdefGhIJKlmNoPQRs..."
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs transition-all font-mono"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Telegram Chat ID / Group ID</label>
+                              <input 
+                                type="text"
+                                value={localSettings.telegramChatId || ''}
+                                onChange={(e) => setLocalSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
+                                onBlur={() => handleUpdateSetting({ telegramChatId: localSettings.telegramChatId })}
+                                placeholder="E.g., 9876543210 or -1001234567"
+                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs transition-all font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-blue-50/40 rounded-2xl border border-blue-50 text-[11px] leading-relaxed">
+                            <div className="text-slate-600 sm:max-w-[70%]">
+                              💡 <strong>কিভাবে সেটআপ করবেন? (Bangla Guide):</strong><br />
+                              ১. Telegram অ্যাপের সার্চ অপশনে যান এবং <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-bold">@BotFather</a> এ ক্লিক করে নতুন একটা Bot তৈরী করতে <code>/newbot</code> ট্যাপ করুন। প্রাপ্ত <strong>HTTP API Token</strong>-টি এখানে পেস্ট করুন।<br />
+                              ২. আপনার বটের ইনবক্সে গিয়ে <code>/start</code> করুন, অথবা একটি গ্রুপ খুলে সেখানে বটকে অ্যাড করে দিন।<br />
+                              ৩. এরপর আপনার Chat ID / Group ID জানতে Telegram অ্যাপেই <a href="https://t.me/userinfobot" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-bold">@userinfobot</a> অথবা <a href="https://t.me/MissRose_bot" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-bold">@MissRose_bot</a> (গ্রুপের ক্ষেত্রে <code>/id</code> লিখবেন) থেকে ID এনে এখানে পেস্ট করুন।
+                            </div>
+                            <button
+                              type="button"
+                              disabled={!localSettings.telegramBotToken || !localSettings.telegramChatId}
+                              onClick={async () => {
+                                try {
+                                  const demoMsg = `🔔 *Store Setup Hook Connection Successful!*\n\nReal-time Telegram order dispatcher alert is now connected to *${localSettings.siteName}*.\n🎉 Everything is working perfectly! Send a real order and check the automation magic!`;
+                                  const response = await fetch(`https://api.telegram.org/bot${localSettings.telegramBotToken}/sendMessage`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      chat_id: localSettings.telegramChatId,
+                                      text: demoMsg,
+                                      parse_mode: 'Markdown'
+                                    })
+                                  });
+                                  if (response.ok) {
+                                    alert('Successfully connected! A confirmation test message was dispatched to your Telegram chat. 🚀');
+                                  } else {
+                                    alert('Failed to connect. Double check bot token token formatting and chat ID permission settings.');
+                                  }
+                                } catch (e: any) {
+                                  alert('Connection Error: ' + e.message);
+                                }
+                              }}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-750 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-xl shadow-md transition-all active:scale-95 shrink-0 disabled:opacity-40"
+                            >
+                              Send Test Alert 🚀
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
